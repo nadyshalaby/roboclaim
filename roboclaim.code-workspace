@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": "./fe"
+		},
+		{
+			"path": "./be"
+		}
+	],
+	"settings": {
+		"next.js": {
+			"version": "15.1.6"
+		},
+		"typescript": {
+			"version": "5.6.3"
+		},
+		"typescript.tslint": {
+			"version": "5.6.3"
+		}
+	}
+}
