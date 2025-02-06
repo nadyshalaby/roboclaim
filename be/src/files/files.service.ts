@@ -12,9 +12,19 @@ import * as path from 'path';
 import { File, FileStatus, FileType } from './entities/file.entity';
 import { ConfigService } from '@nestjs/config';
 
+interface FileMetadata {
+  uploadedFrom: string;
+  encoding: string;
+}
+
+export interface FileCreateResult {
+  id: string;
+  path: string;
+}
+
 @Injectable()
 export class FilesService {
-  private readonly allowedMimeTypes = new Map([
+  private readonly allowedMimeTypes = new Map<string, FileType>([
     ['application/pdf', FileType.PDF],
     ['image/png', FileType.IMAGE],
     ['image/jpeg', FileType.IMAGE],
@@ -34,7 +44,10 @@ export class FilesService {
 
   async create(file: Express.Multer.File, userId: string) {
     // Validate file size
-    const maxSize = this.configService.get('MAX_FILE_SIZE', 10 * 1024 * 1024);
+    const maxSize = this.configService.get<number>(
+      'MAX_FILE_SIZE',
+      10 * 1024 * 1024,
+    );
     if (file.size > maxSize) {
       throw new BadRequestException('File size exceeds the maximum limit');
     }
@@ -59,10 +72,12 @@ export class FilesService {
         metadata: {
           uploadedFrom: file.originalname,
           encoding: file.encoding,
-        },
+        } as FileMetadata,
       });
 
-      const savedFile = await this.fileRepository.save(newFile);
+      const savedFile = (await this.fileRepository.save(
+        newFile,
+      )) as FileCreateResult;
 
       // Add job to queue with retry options
       await this.fileProcessingQueue.add(
@@ -88,7 +103,9 @@ export class FilesService {
       if (file.path && fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
       }
-      throw new BadRequestException(`Failed to process file: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      throw new BadRequestException(`Failed to process file: ${errorMessage}`);
     }
   }
 

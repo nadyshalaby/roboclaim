@@ -1,23 +1,23 @@
 # Base image
-FROM node:22-alpine
+FROM node:23-slim
 
 # Create app directory
 WORKDIR /usr/src/app
 
-# Copy package files first for better caching
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package files
 COPY package*.json ./
 COPY pnpm-lock.yaml ./
-
-# Install pnpm
-RUN npm install -g pnpm
 
 # Install dependencies
 RUN pnpm install
 
-# Copy source code
+# Copy app source
 COPY . .
 
-# Build the application
+# Build app
 RUN pnpm build
 
 # Create uploads directory
@@ -26,5 +26,5 @@ RUN mkdir -p uploads
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["pnpm", "start:prod"]
+# Start app
+CMD ["pnpm", "start:dev"]

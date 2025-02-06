@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       - app-network
 
@@ -19,6 +20,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
     networks:
       - app-network
 
@@ -26,11 +28,16 @@ services:
     build:
       context: ./be
       dockerfile: Dockerfile
+    volumes:
+      - ./be:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
     ports:
       - "3000:3000"
+    command: pnpm start:dev
     environment:
       - PORT=${PORT}
-      - NODE_ENV=production
+      - NODE_ENV=development
       - FRONTEND_URL=${FRONTEND_URL}
       - MAX_FILE_SIZE=${MAX_FILE_SIZE}
       - UPLOAD_DIR=${UPLOAD_DIR}
@@ -47,8 +54,6 @@ services:
     depends_on:
       - postgres
       - redis
-    volumes:
-      - ./be/uploads:/usr/src/app/uploads
     networks:
       - app-network
 
@@ -56,10 +61,16 @@ services:
     build:
       context: ./fe
       dockerfile: Dockerfile
+    volumes:
+      - ./fe:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3001:3001"
+    command: npm run dev
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3000
+      - NODE_ENV=development
     depends_on:
       - backend
     networks:

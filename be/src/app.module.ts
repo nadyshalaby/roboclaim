@@ -7,6 +7,7 @@ import { BullModule } from '@nestjs/bull';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
+import { ApiTags } from '@nestjs/swagger';
 
 @Module({
   imports: [
@@ -43,4 +44,5 @@ import { FilesModule } from './files/files.module';
   controllers: [AppController],
   providers: [AppService],
 })
+@ApiTags('app')
 export class AppModule {}

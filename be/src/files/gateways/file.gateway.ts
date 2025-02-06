@@ -9,6 +9,17 @@ import { UseGuards, Logger } from '@nestjs/common';
 import { WsJwtAuthGuard } from '../../auth/guards/ws-jwt-auth.guard';
 import { FileStatus } from '../entities/file.entity';
 
+interface FileStatusData {
+  fileId: string;
+  status: FileStatus;
+  data?: Record<string, unknown>;
+  timestamp: string;
+}
+
+interface SocketUser {
+  userId: string;
+}
+
 @WebSocketGateway({
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
@@ -25,7 +36,7 @@ export class FileGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private userSockets: Map<string, string[]> = new Map();
 
-  handleConnection(client: Socket) {
+  handleConnection(client: Socket & { handshake: { auth: SocketUser } }) {
     const userId = client.handshake.auth.userId;
     if (!userId) {
       this.logger.warn(
@@ -52,7 +63,7 @@ export class FileGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: Socket & { handshake: { auth: SocketUser } }) {
     const userId = client.handshake.auth.userId;
     if (userId) {
       const userSocketIds = this.userSockets.get(userId) || [];
@@ -69,7 +80,7 @@ export class FileGateway implements OnGatewayConnection, OnGatewayDisconnect {
     userId: string,
     fileId: string,
     status: FileStatus,
-    data?: any,
+    data?: Record<string, unknown>,
   ) {
     try {
       const userSocketIds = this.userSockets.get(userId);
@@ -78,7 +89,7 @@ export class FileGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const payload = {
+      const payload: FileStatusData = {
         fileId,
         status,
         data,
@@ -91,7 +102,7 @@ export class FileGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (error) {
       this.logger.error(
         `Error notifying file status for user ${userId}:`,
-        error,
+        error instanceof Error ? error.message : 'Unknown error',
       );
     }
   }
