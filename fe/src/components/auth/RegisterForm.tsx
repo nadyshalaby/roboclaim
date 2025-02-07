@@ -44,11 +44,23 @@ export default function RegisterForm() {
   const registerMutation = useMutation({
     mutationFn: auth.register,
     onSuccess: () => {
-      toast.success('Registered successfully');
+      const message = 'Registered successfully';
+      toast.success(message);
+      const successDiv = document.createElement('div');
+      successDiv.setAttribute('data-testid', 'success-message');
+      successDiv.className = 'text-green-600 text-sm';
+      successDiv.textContent = message;
+      document.querySelector('form')?.appendChild(successDiv);
       router.push('/login');
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || 'Failed to register');
+      const errorMessage = error.response?.data?.message || 'Failed to register';
+      toast.error(errorMessage);
+      const errorDiv = document.createElement('div');
+      errorDiv.setAttribute('data-testid', 'error-message');
+      errorDiv.className = 'text-red-600 text-sm';
+      errorDiv.textContent = errorMessage;
+      document.querySelector('form')?.appendChild(errorDiv);
     },
     onSettled: () => {
       setIsLoading(false);
@@ -61,7 +73,7 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" data-testid="register-form">
       <div>
         <label htmlFor="email" className="block text-sm font-medium">
           Email
@@ -69,11 +81,12 @@ export default function RegisterForm() {
         <input
           type="email"
           id="email"
+          data-testid="email-input"
           {...register('email')}
           className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-600" data-testid="email-error">{errors.email.message}</p>
         )}
       </div>
 
@@ -84,11 +97,12 @@ export default function RegisterForm() {
         <input
           type="password"
           id="password"
+          data-testid="password-input"
           {...register('password')}
           className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-red-600" data-testid="password-error">{errors.password.message}</p>
         )}
       </div>
 
@@ -98,6 +112,7 @@ export default function RegisterForm() {
         </label>
         <select
           id="role"
+          data-testid="role-input"
           {...register('role')}
           className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         >
@@ -112,6 +127,7 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={isLoading}
+        data-testid="register-button"
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
       >
         {isLoading ? 'Loading...' : 'Register'}

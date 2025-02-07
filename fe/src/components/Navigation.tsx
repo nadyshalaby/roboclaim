@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -8,6 +9,15 @@ import Cookies from 'js-cookie';
 export default function Navigation() {
   const pathname = usePathname();
   const { user, clearAuth } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  // Only enable client-side features after hydration
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Debug log the auth state
+  console.log('Navigation auth state:', { user, pathname });
 
   const isActive = (path: string) => pathname === path;
 
@@ -30,7 +40,14 @@ export default function Navigation() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div 
+            className="flex items-center space-x-4" 
+            data-testid="user-menu" 
+            {...(isClient ? {
+              'data-user-state': user ? 'logged-in' : 'logged-out',
+              'data-cy-debug': JSON.stringify({ hasUser: !!user, userEmail: user?.email })
+            } : {})}
+          >
             {user ? (
               <>
                 <Link
@@ -55,6 +72,16 @@ export default function Navigation() {
                     Admin
                   </Link>
                 )}
+                <Link
+                  href="/profile"
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    isActive('/profile')
+                      ? 'text-indigo-600'
+                      : 'text-gray-600 hover:text-indigo-600'
+                  }`}
+                >
+                  Profile
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-indigo-600"

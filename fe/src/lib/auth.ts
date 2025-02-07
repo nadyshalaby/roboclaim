@@ -6,12 +6,22 @@ interface User {
   id: string;
   email: string;
   role: 'user' | 'admin';
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  phoneNumber?: string;
+  company?: string;
+  jobTitle?: string;
+  bio?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface AuthState {
   user: User | null;
   token: string | null;
   setAuth: (user: User, token: string) => void;
+  setUser: (user: User) => void;
   clearAuth: () => void;
 }
 
@@ -36,6 +46,7 @@ export const useAuth = create<AuthState>()(
       user: null,
       token: null,
       setAuth: (user, token) => set({ user, token }),
+      setUser: (user) => set({ user }),
       clearAuth: () => set({ user: null, token: null }),
     }),
     {

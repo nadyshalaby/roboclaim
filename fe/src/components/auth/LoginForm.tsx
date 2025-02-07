@@ -38,7 +38,9 @@ export default function LoginForm() {
       router.push('/dashboard');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to login');
+      const errorMessage = error.response?.data?.message || 'Failed to login';
+      toast.error(errorMessage);
+      setIsLoading(false);
     },
     onSettled: () => {
       setIsLoading(false);
@@ -51,7 +53,7 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" data-testid="login-form">
       <div>
         <label htmlFor="email" className="block text-sm font-medium">
           Email
@@ -59,32 +61,45 @@ export default function LoginForm() {
         <input
           type="email"
           id="email"
+          data-testid="email-input"
           {...register('email')}
           className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-600" data-testid="email-error">
+            {errors.email.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-mediu">
+        <label htmlFor="password" className="block text-sm font-medium">
           Password
         </label>
         <input
           type="password"
           id="password"
+          data-testid="password-input"
           {...register('password')}
           className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-red-600" data-testid="password-error">
+            {errors.password.message}
+          </p>
         )}
       </div>
 
+      {loginMutation.error && (
+        <div data-testid="error-message" className="text-red-600 text-sm mt-2">
+          {loginMutation.error.response?.data?.message || 'Failed to login'}
+        </div>
+      )}
+      
       <button
         type="submit"
         disabled={isLoading}
+        data-testid="login-button"
         className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
       >
         {isLoading ? 'Loading...' : 'Login'}

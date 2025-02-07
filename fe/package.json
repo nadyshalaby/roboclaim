@@ -9,7 +9,10 @@
     "lint": "next lint",
     "test": "vitest",
     "test:watch": "vitest watch",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "cypress": "cypress open",
+    "cypress:headless": "cypress run",
+    "test:e2e": "start-server-and-test dev 3001 cypress"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
@@ -31,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.4",
+    "@testing-library/cypress": "^10.0.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^14.6.1",
@@ -41,10 +45,12 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "cypress": "^14.0.2",
     "eslint": "^8.56.0",
     "eslint-config-next": "15.1.6",
     "jsdom": "^26.0.0",
     "postcss": "^8",
+    "start-server-and-test": "^2.0.10",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "vitest": "^3.0.4"

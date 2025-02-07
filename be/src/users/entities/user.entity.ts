@@ -26,8 +26,29 @@ export class User {
   @Exclude()
   password: string;
 
+  @Column({ nullable: true })
+  firstName: string;
+
+  @Column({ nullable: true })
+  lastName: string;
+
+  @Column({ nullable: true })
+  avatarUrl: string;
+
   @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
   role: UserRole;
+
+  @Column({ nullable: true })
+  phoneNumber: string;
+
+  @Column({ nullable: true })
+  company: string;
+
+  @Column({ nullable: true })
+  jobTitle: string;
+
+  @Column({ type: 'text', nullable: true })
+  bio: string;
 
   @OneToMany(() => File, (file) => file.user)
   files: File[];

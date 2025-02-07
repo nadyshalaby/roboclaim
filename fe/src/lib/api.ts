@@ -26,6 +26,13 @@ export interface User {
   id: string;
   email: string;
   role: 'user' | 'admin';
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+  phoneNumber?: string;
+  company?: string;
+  jobTitle?: string;
+  bio?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -83,6 +90,23 @@ export const files = {
   },
   delete: async (id: string) => {
     const response = await api.delete(`/files/${id}`);
+    return response.data;
+  },
+};
+
+interface UpdatePasswordData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export const users = {
+  updateProfile: async (data: Partial<User>) => {
+    const response = await api.put('/users/profile', data);
+    return response.data;
+  },
+  updatePassword: async (data: UpdatePasswordData) => {
+    const response = await api.put('/users/password', data);
     return response.data;
   },
 };
