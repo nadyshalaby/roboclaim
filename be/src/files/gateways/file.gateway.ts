@@ -26,6 +26,7 @@ interface SocketUser {
     credentials: true,
   },
   namespace: 'files',
+  transports: ['websocket'],
 })
 @UseGuards(WsJwtAuthGuard)
 export class FileGateway implements OnGatewayConnection, OnGatewayDisconnect {

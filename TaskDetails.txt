@@ -1,0 +1,88 @@
+Assessment Details:
+Objective: Develop a hosted version of the project along with a Git repository containing the backend and frontend code.
+Time Allocation: The assignment is designed to be completed within 4-5 hours of focused effort. Please avoid exceeding this time frame.
+Deadline: Submit the hosted project URLs and Git repository links by Friday, January 31, 2025, before 5:00 PM (Cairo Time).
+Assignment: File Upload and Analysis System
+Build a secure, robust full-stack system where users can upload files, the backend processes and extracts data, and the frontend displays processed results with advanced features.
+Core Features
+Authentication & Authorization
+Backend (NestJS):
+Endpoints:
+Implement JWT-based authentication with roles (e.g., user, admin).
+Store user credentials securely using hashing (e.g., bcrypt).
+Use guards and interceptors for authentication and role-based access.
+POST /auth/login - Authenticate user and return JWT.
+POST /auth/register - Allow new user registration.
+GET /auth/profile - Fetch user profile details.
+Frontend (Next.js):
+Implement pages for login, registration, and user profile.
+Role-based access: Admin users manage other users, while regular users manage only their data.
+File Upload and Processing
+Backend:
+Endpoints:
+File uploads should be processed and stored locally.
+Validate files (type, size, etc.) using middleware.
+Extract data:
+PDF text using libraries like pdf-lib or pdf2json.
+Image text using OCR (e.g., Tesseract or another local OCR library).
+Parse structured data formats (CSV, Excel) with libraries like papaparse or xlsx.
+Process files asynchronously using a queue system (e.g., NestJS Bull with a local Redis instance).
+Store file metadata and extracted results in a database.
+Maintain processing logs for each file.
+POST /upload - Upload single or multiple files.
+GET /files - Fetch paginated, filterable file data.
+GET /files/:id - Fetch details and results of a specific file.
+Frontend:
+Drag-and-drop file upload UI with real-time progress.
+Display file processing status and results (name, type, data snippets).
+Allow file search, filtering, and sorting (e.g., by type, upload date).
+User-Specific Data & Insights
+Backend:
+Store user-specific data and tie file uploads to user accounts.
+Enable pagination, filtering, and sorting for user files.
+Provide summary insights:
+Total files uploaded, file type breakdown.
+Error rates or invalid files.
+Frontend:
+Dashboard:
+Display files with metadata, extraction method, and status.
+Include charts or tables summarizing user activity (e.g., pie chart of file types).
+Audit Logs and Real-Time Updates
+Backend:
+Log key user actions (e.g., login, file uploads).
+Use WebSocket (via NestJS Gateway) or Server-Sent Events for real-time updates on file processing.
+Frontend:
+Notifications for processing updates.
+Logs display showing key user actions (e.g., files uploaded, errors encountered).
+Technical Details
+Backend (NestJS):
+Use typeorm or prisma for database interactions with SQLite or PostgreSQL.
+Use middleware for file validation and guards for authentication.
+Implement file processing as a background job system.
+Modularize the application into distinct features (e.g., auth, file upload, processing).
+Frontend (Next.js & React):
+Use React Query or SWR for efficient data fetching and caching.
+Use component libraries (e.g., Material-UI or Tailwind CSS) for UI development.
+Implement client-side state management (e.g., Context API).
+Additional Challenges for Candidates
+Advanced Extraction Logic:
+Extract text from multilingual PDFs (e.g., English, Spanish).
+Process files with mixed content (e.g., OCR for images, text for text layers).
+Local File Previews:
+Generate previews for uploaded files (e.g., thumbnails for images, first page of PDFs).
+Error Handling & Testing:
+Implement robust error handling for invalid file formats and large uploads.
+Write unit and integration tests for both backend and frontend components.
+Responsive Design:
+Ensure the frontend is fully responsive and works on mobile devices.
+Deliverables
+Backend:
+Fully functional API with complete endpoints and authentication.
+Local file storage and processing logic.
+Documentation for API usage.
+Frontend:
+Complete UI with functional components for all user stories.
+Responsive and role-based UI.
+Extras:
+Dockerized setup for easy deployment.
+End-to-end tests using tools like Playwright or Cypress.

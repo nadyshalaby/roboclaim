@@ -74,7 +74,7 @@ export const files = {
     return response.data;
   },
   getAll: async () => {
-    const response = await api.get<FileUploadResponse[]>('/files');
+    const response = await api.get<{files: FileUploadResponse[]}>('/files');
     return response.data;
   },
   getOne: async (id: string) => {

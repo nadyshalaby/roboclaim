@@ -3,12 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import Cookies from 'js-cookie';
 
 export default function Navigation() {
   const pathname = usePathname();
   const { user, clearAuth } = useAuth();
 
   const isActive = (path: string) => pathname === path;
+
+  const handleLogout = () => {
+    clearAuth();
+    Cookies.remove('auth-storage', { path: '/' });
+    window.location.href = '/login';
+  };
 
   return (
     <nav className="bg-white shadow">
@@ -49,10 +56,7 @@ export default function Navigation() {
                   </Link>
                 )}
                 <button
-                  onClick={() => {
-                    clearAuth();
-                    window.location.href = '/login';
-                  }}
+                  onClick={handleLogout}
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-indigo-600"
                 >
                   Logout

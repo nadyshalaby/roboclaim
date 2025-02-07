@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import Cookies from 'js-cookie';
 
 interface User {
   id: string;
@@ -14,6 +15,21 @@ interface AuthState {
   clearAuth: () => void;
 }
 
+// Custom storage adapter for cookies
+const cookieStorage = {
+  getItem: (name: string) => {
+    const value = Cookies.get(name);
+    return value ? JSON.parse(value) : null;
+  },
+  setItem: (name: string, value: any) => {
+    // Set cookie with path=/ to make it available for the middleware
+    Cookies.set(name, JSON.stringify(value), { path: '/' });
+  },
+  removeItem: (name: string) => {
+    Cookies.remove(name, { path: '/' });
+  },
+};
+
 export const useAuth = create<AuthState>()(
   persist(
     (set) => ({
@@ -24,6 +40,7 @@ export const useAuth = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      storage: createJSONStorage(() => cookieStorage),
     }
   )
 );

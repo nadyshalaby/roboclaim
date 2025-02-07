@@ -18,13 +18,13 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { User } from '../users/entities/user.entity';
-
+import { UserDto } from './dto/user.dto';
+import * as fs from 'fs';
 @ApiTags('files')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -36,10 +36,22 @@ export class FilesController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: (req, file, cb) => {
+          const uploadDir = path.join(
+            process.cwd(),
+            'uploads',
+            (req.user as UserDto).userId,
+          );
+
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+
+          cb(null, uploadDir);
+        },
         filename: (req, file, cb) => {
           const randomName = uuidv4();
-          cb(null, `${randomName}${extname(file.originalname)}`);
+          cb(null, `${randomName}${path.extname(file.originalname)}`);
         },
       }),
     }),
@@ -60,31 +72,31 @@ export class FilesController {
         }),
     )
     file: Express.Multer.File,
-    @GetUser() user: User,
+    @GetUser() user: UserDto,
   ) {
-    return this.filesService.create(file, user.id);
+    return this.filesService.create(file, user.userId);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all files for the current user' })
   @ApiResponse({ status: 200, description: 'Return all files' })
-  findAll(@GetUser() user: User) {
-    return this.filesService.findAll(user.id);
+  findAll(@GetUser() user: UserDto) {
+    return this.filesService.findAll(user.userId);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get file by id' })
   @ApiResponse({ status: 200, description: 'Return a file' })
   @ApiResponse({ status: 404, description: 'File not found' })
-  findOne(@Param('id') id: string, @GetUser() user: User) {
-    return this.filesService.findOne(id, user.id);
+  findOne(@Param('id') id: string, @GetUser() user: UserDto) {
+    return this.filesService.findOne(id, user.userId);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete file by id' })
   @ApiResponse({ status: 200, description: 'File deleted successfully' })
   @ApiResponse({ status: 404, description: 'File not found' })
-  remove(@Param('id') id: string, @GetUser() user: User) {
-    return this.filesService.remove(id, user.id);
+  remove(@Param('id') id: string, @GetUser() user: UserDto) {
+    return this.filesService.remove(id, user.userId);
   }
 }

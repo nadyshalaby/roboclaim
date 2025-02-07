@@ -46,15 +46,19 @@ export default function FileList() {
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<FileUploadResponse | null>(null);
 
-  const { data: fileList, isLoading } = useQuery({
+  const { data: response, isLoading, refetch } = useQuery({
     queryKey: ['files'],
     queryFn: () => files.getAll(),
+    // Refresh data every 5 seconds as a fallback
+    refetchInterval: 5000,
     throwOnError: (error: ApiError | Error) => {
       const msg = (error as ApiError).response?.data?.message || 'Failed to fetch files';
       toast.error(msg);
       return true;
-    },
+    },    
   });
+
+  const fileList = response?.files || [];
 
   const deleteMutation = useMutation({
     mutationFn: files.delete,
@@ -68,46 +72,88 @@ export default function FileList() {
   });
 
   useEffect(() => {
-    socketService.connect();
+    const connectSocket = () => {
+      try {
+        socketService.connect();
+        console.log('Socket connected successfully');
+      } catch (error) {
+        console.error('Socket connection failed:', error);
+        // Retry connection after 5 seconds
+        setTimeout(connectSocket, 5000);
+      }
+    };
 
-    const handleFileStatus = (data: {
+    const handleFileStatus = async (data: {
       fileId: string;
       status: FileUploadResponse['status'];
       data?: Record<string, unknown>;
     }) => {
-      queryClient.setQueryData<FileUploadResponse[]>(['files'], (oldData) => {
-        if (!oldData) return oldData;
+      console.log('Received file status update:', data);
+      
+      try {
+        // Force a fresh fetch immediately
+        await refetch();
+        console.log('Files refetched successfully');
 
-        return oldData.map((file) => {
-          if (file.id === data.fileId) {
-            return {
-              ...file,
-              status: data.status,
-              extractedData: data.data,
-              errorMessage: data.data?.error as string | undefined,
-            };
+        // Update the cache with the latest data
+        queryClient.setQueryData(['files'], (oldData: any) => {
+          console.log('Current data in cache:', oldData);
+          
+          if (!oldData || !oldData.files) {
+            console.warn('No existing data in cache');
+            return { files: [], meta: oldData?.meta || {} };
           }
-          return file;
+
+          const newFiles = oldData.files.map((file: FileUploadResponse) => {
+            if (file.id === data.fileId) {
+              const updatedFile = {
+                ...file,
+                status: data.status,
+                extractedData: data.data,
+                errorMessage: data.data?.error as string | undefined,
+              };
+              console.log('Updated file:', updatedFile);
+              return updatedFile;
+            }
+            return file;
+          });
+
+          console.log('New file list:', newFiles);
+          return {
+            ...oldData,
+            files: newFiles,
+          };
         });
-      });
+      } catch (error) {
+        console.error('Error updating files:', error);
+        toast.error('Failed to update files list');
+      }
 
       // Show toast notifications for status changes
       switch (data.status) {
         case 'completed':
-          toast.success('File processing completed');
+          toast.dismiss(`processing-${data.fileId}`); // Dismiss the loading toast
+          toast.success(`File processing completed: ${data.fileId}`);
           break;
         case 'failed':
-          toast.error('File processing failed');
+          toast.dismiss(`processing-${data.fileId}`); // Dismiss the loading toast
+          toast.error(`File processing failed: ${data.fileId}`);
+          break;
+        case 'processing':
+          toast.loading(`Processing file: ${data.fileId}`, {
+            id: `processing-${data.fileId}`, // Add an ID to the toast
+          });
           break;
       }
     };
 
+    // Setup socket event listener for file status updates
     socketService.addListener('fileStatus', handleFileStatus);
-
+    
     return () => {
       socketService.removeListener('fileStatus', handleFileStatus);
     };
-  }, [queryClient]);
+  }, [queryClient, refetch]);
 
   if (isLoading) {
     return <div>Loading...</div>;

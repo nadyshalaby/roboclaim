@@ -8,6 +8,7 @@ interface WsRequest {
   handshake: {
     auth?: {
       token?: string;
+      userId?: string;
     };
   };
   data: {
@@ -24,20 +25,33 @@ export class WsJwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const client = context.switchToWs().getClient<WsRequest>();
-    const token = client.handshake.auth?.token;
-    const authToken = token?.split(' ')[1];
+    const { token, userId } = client.handshake.auth || {};
 
-    if (!authToken) {
-      throw new WsException('Unauthorized');
+    if (!token || !userId) {
+      throw new WsException('Missing authentication credentials');
     }
+
+    const authToken = token.split(' ')[1];
 
     try {
       const { sub } = this.jwtService.verify<{ sub: string }>(authToken);
+
+      // Verify that the token's subject matches the provided userId
+      if (sub !== userId) {
+        throw new WsException('Invalid user credentials');
+      }
+
       const user = await this.usersService.findOne(sub);
-      client.data.user = user;
+      if (!user) {
+        throw new WsException('User not found');
+      }
+
+      client.data = { user };
       return true;
-    } catch {
-      throw new WsException('Invalid token');
+    } catch (error: unknown) {
+      throw new WsException(
+        error instanceof Error ? error.message : 'Invalid token',
+      );
     }
   }
 }

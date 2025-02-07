@@ -1,6 +1,14 @@
 # Base image
 FROM node:23-slim
 
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -17,14 +25,10 @@ RUN pnpm install
 # Copy app source
 COPY . .
 
-# Build app
-RUN pnpm build
-
 # Create uploads directory
 RUN mkdir -p uploads
 
 # Expose port
 EXPOSE 3000
 
-# Start app
-CMD ["pnpm", "start:dev"]
+# No CMD here since we're using docker-compose command

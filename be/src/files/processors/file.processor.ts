@@ -3,7 +3,7 @@ import { Job } from 'bull';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
-import pdf from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 import { createWorker } from 'tesseract.js';
 import { parse } from 'csv-parse/sync';
 import * as xlsx from 'xlsx';
@@ -63,6 +63,7 @@ export class FileProcessor {
     }>,
   ) {
     const { fileId, filePath, fileType, userId } = job.data;
+    console.log({ fileId, filePath, fileType, userId });
     this.logger.debug(`Processing file ${fileId} of type ${fileType}`);
 
     try {
@@ -148,7 +149,7 @@ export class FileProcessor {
   private async processPdf(filePath: string): Promise<ExtractedData> {
     const dataBuffer = fs.readFileSync(filePath);
     try {
-      const data = (await pdf(dataBuffer)) as PdfData;
+      const data = (await pdfParse(dataBuffer)) as PdfData;
       return {
         text: data.text,
         numPages: data.numpages,

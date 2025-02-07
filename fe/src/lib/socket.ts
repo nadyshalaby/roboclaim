@@ -20,17 +20,24 @@ class SocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    const token = useAuth.getState().token;
-    if (!token) return;
+    const { token, user } = useAuth.getState();
+    if (!token || !user) return;
 
     this.socket = io(`${process.env.NEXT_PUBLIC_API_URL}/files`, {
       auth: {
         token: `Bearer ${token}`,
+        userId: user.id
       },
+      withCredentials: true,
+      transports: ['websocket']
     });
 
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
     });
 
     this.socket.on('disconnect', () => {
@@ -77,3 +84,4 @@ class SocketService {
 }
 
 export const socketService = new SocketService();
+export default socketService;

@@ -61,6 +61,7 @@ export class FilesService {
       }
 
       const filePath = path.join(uploadDir, file.filename);
+
       const newFile = this.fileRepository.create({
         originalName: file.originalname,
         filename: file.filename,
