@@ -1,7 +1,8 @@
 describe('Authentication', () => {
+  // Use environment variables for test credentials
   const testUser = {
-    email: 'user@example.com',
-    password: 'password',
+    email: Cypress.env('TEST_USER_EMAIL') || 'user@example.com',
+    password: Cypress.env('TEST_USER_PASSWORD') || 'password',
   }
 
   beforeEach(() => {
@@ -11,54 +12,49 @@ describe('Authentication', () => {
   describe('Login', () => {
     it('should successfully login with valid credentials', () => {
       cy.login(testUser.email, testUser.password)
-      
+
+      // Wait for the login request to complete
+      cy.wait('@loginRequest').its('response.statusCode').should('eq', 201)
+
       // Wait for navigation
       cy.url().should('include', '/dashboard')
-      
-      // Debug: Log the current localStorage state
-      cy.window().then((win) => {
-        console.log('LocalStorage auth:', win.localStorage.getItem('auth-storage'))
+
+      // Check if user menu exists with more detailed error
+      cy.get('body').then($body => {
+        if ($body.find('[data-testid=user-menu]').length === 0) {
+          cy.log('User menu not found. Available data-testid elements:')
+          const elements = $body.find('[data-testid]')
+          elements.each((_, el) => {
+            cy.log(`Found element with data-testid: ${el.getAttribute('data-testid')}`)
+          })
+        }
       })
-      
-      // Debug: Log all data-testid elements
-      cy.get('[data-testid]').then($elements => {
-        console.log('Found data-testid elements:', $elements.map((_, el) => el.getAttribute('data-testid')).get())
-      })
-      
-      // Check for user menu and wait for hydration
-      cy.get('[data-testid=user-menu]')
+
+      // Now try to find the menu
+      cy.get('[data-testid=user-menu]', { timeout: 10000 })
         .should('exist')
         .should('be.visible')
-        // Wait for hydration to complete
         .should('have.attr', 'data-user-state', 'logged-in')
-        // Debug: Log the menu's attributes
-        .invoke('attr', 'data-cy-debug')
-        .then(debugAttr => {
-          console.log('User menu debug data:', debugAttr)
+        .within(() => {
+          cy.contains('Dashboard').should('be.visible')
+          cy.contains('Profile').should('be.visible')
+          cy.contains('Logout').should('be.visible')
         })
-      
-      // Check menu contents
-      cy.get('[data-testid=user-menu]').within(() => {
-        cy.contains('Dashboard').should('be.visible')
-        cy.contains('Profile').should('be.visible')
-        cy.contains('Logout').should('be.visible')
-      })
     })
 
     it('should show error with invalid credentials', () => {
-      // Login with shouldSucceed = false to trigger error response
       cy.login(testUser.email, 'wrongpassword')
-      
-      // Wait for the API response
-      cy.wait('@loginRequest')
-      
+
+      // Wait for failed API response
+      cy.wait('@loginRequest').its('response.statusCode').should('eq', 401)
+
       // Check for error message
       cy.get('[data-testid=login-form]').within(() => {
         cy.get('[data-testid=error-message]')
           .should('be.visible')
           .and('contain', 'Invalid credentials')
       })
-      
+
       // Verify we're still on the login page
       cy.url().should('include', '/login')
     })
@@ -70,14 +66,30 @@ describe('Authentication', () => {
       password: 'Test123!@#',
     }
 
+    beforeEach(() => {
+      // Intercept registration requests
+      cy.intercept('POST', `${Cypress.env('apiUrl')}/auth/register`).as('registerRequest')
+    })
+
     it('should successfully register a new user', () => {
       cy.register(newUser.email, newUser.password)
+
+      // Wait for successful registration
+      cy.wait('@registerRequest').its('response.statusCode').should('eq', 201)
+
+      // Verify redirect to login
       cy.url().should('include', '/login')
-      cy.get('[data-testid=success-message]').should('be.visible').and('contain', 'Registered successfully')
+      cy.get('[data-testid=success-message]')
+        .should('be.visible')
+        .and('contain', 'Registered successfully')
     })
 
     it('should show error when registering with existing email', () => {
       cy.register(testUser.email, testUser.password)
+
+      // Wait for error response
+      cy.wait('@registerRequest').its('response.statusCode').should('eq', 400)
+
       cy.get('[data-testid=error-message]')
         .should('be.visible')
         .and('contain', 'Email already exists')
@@ -86,7 +98,12 @@ describe('Authentication', () => {
 
   describe('Logout', () => {
     beforeEach(() => {
+      // Login and wait for success before testing logout
       cy.login(testUser.email, testUser.password)
+      cy.wait('@loginRequest').its('response.statusCode').should('eq', 200)
+
+      // Intercept logout request
+      cy.intercept('POST', `${Cypress.env('apiUrl')}/auth/logout`).as('logoutRequest')
     })
 
     it('should successfully logout', () => {
