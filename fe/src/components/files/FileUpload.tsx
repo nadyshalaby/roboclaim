@@ -48,7 +48,7 @@ export default function FileUpload() {
           : 'border-gray-300 hover:border-indigo-500'
       }`}
     >
-      <input {...getInputProps()} />
+      <input data-testid="file-input" {...getInputProps()} />
       <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
       <p className="mt-2 text-sm text-gray-600">
         {isDragActive

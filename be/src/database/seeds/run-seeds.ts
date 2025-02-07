@@ -2,14 +2,14 @@ import { DataSource } from 'typeorm';
 import { createTestUsers } from './test-users.seed';
 
 const dataSource = new DataSource({
-  type: 'postgres', // or your database type
-  host: 'localhost',
+  type: 'postgres',
+  host: 'postgres',
   port: 5432,
   username: 'postgres',
   password: 'postgres',
   database: 'roboclaim',
   entities: ['src/**/*.entity.ts'],
-  synchronize: true, // be careful with this in production
+  synchronize: true,
 });
 
 async function runSeeds() {

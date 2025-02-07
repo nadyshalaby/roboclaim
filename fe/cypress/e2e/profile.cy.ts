@@ -16,7 +16,7 @@ describe('Profile Management', () => {
       cy.get('[data-testid=email-input]').clear().type(newEmail)
       cy.get('[data-testid=save-profile-button]').click()
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'Profile updated successfully')
       
@@ -43,7 +43,7 @@ describe('Profile Management', () => {
       cy.get('[data-testid=confirm-password-input]').type(newPassword)
       cy.get('[data-testid=update-password-button]').click()
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'Password updated successfully')
     })

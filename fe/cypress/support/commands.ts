@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+/// <reference types="cypress-file-upload" />
 
 declare global {
   namespace Cypress {
@@ -7,6 +8,7 @@ declare global {
       register(email: string, password: string, role: string): Chainable<void>
       logout(): Chainable<void>
       uploadFile(filePath: string, fileType: string): Chainable<void>
+      attachFile: any
     }
   }
 }

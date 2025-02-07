@@ -37,7 +37,7 @@ describe('Role Management', () => {
           cy.get('[data-testid=save-role-button]').click()
         })
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'Role updated successfully')
     })

@@ -165,7 +165,7 @@ export default function FileList() {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="file-list">
         {fileList.map((file) => (
           <div
             key={file.id}

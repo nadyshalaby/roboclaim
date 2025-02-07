@@ -29,6 +29,15 @@ import { UsersModule } from '../users/users.module';
     }),
     BullModule.registerQueue({
       name: 'file-processing',
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000
+        },
+        removeOnComplete: true,
+        removeOnFail: false
+      }
     }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

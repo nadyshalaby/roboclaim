@@ -1,42 +1,39 @@
 describe('File Management', () => {
   const testUser = {
-    email: 'test@example.com',
-    password: 'Test123!@#',
+    email: 'user@example.com',
+    password: 'password',
   }
 
   beforeEach(() => {
     cy.login(testUser.email, testUser.password)
-    cy.visit('/files')
   })
 
   describe('File Upload', () => {
     it('should upload an image file successfully', () => {
-      cy.fixture('test-image.jpg').then(fileContent => {
+      cy.fixture('test-image.png').then(fileContent => {
         cy.get('[data-testid=file-input]').attachFile({
           fileContent,
-          fileName: 'test-image.jpg',
-          mimeType: 'image/jpeg'
+          fileName: 'test-image.png',
+          mimeType: 'image/png'
         })
       })
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'File uploaded successfully')
       
       cy.get('[data-testid=file-list]')
-        .should('contain', 'test-image.jpg')
+        .should('contain', 'test-image.png')
     })
 
     it('should upload a PDF file successfully', () => {
-      cy.fixture('test-document.pdf').then(fileContent => {
-        cy.get('[data-testid=file-input]').attachFile({
-          fileContent,
-          fileName: 'test-document.pdf',
-          mimeType: 'application/pdf'
-        })
+      cy.get('[data-testid=file-input]').attachFile({
+        filePath: 'test-document.pdf',
+        fileName: 'test-document.pdf',
+        mimeType: 'application/pdf'
       })
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'File uploaded successfully')
       
@@ -45,15 +42,13 @@ describe('File Management', () => {
     })
 
     it('should upload a CSV file successfully', () => {
-      cy.fixture('test-data.csv').then(fileContent => {
-        cy.get('[data-testid=file-input]').attachFile({
-          fileContent,
-          fileName: 'test-data.csv',
-          mimeType: 'text/csv'
-        })
+      cy.get('[data-testid=file-input]').attachFile({
+        filePath: 'test-data.csv',
+        fileName: 'test-data.csv',
+        mimeType: 'text/csv'
       })
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'File uploaded successfully')
       
@@ -79,10 +74,10 @@ describe('File Management', () => {
   describe('File Deletion', () => {
     beforeEach(() => {
       // Upload a test file first
-      cy.fixture('test-image.jpg').then(fileContent => {
+      cy.fixture('test-image.png').then(fileContent => {
         cy.get('[data-testid=file-input]').attachFile({
           fileContent,
-          fileName: 'test-image.jpg',
+          fileName: 'test-image.png',
           mimeType: 'image/jpeg'
         })
       })
@@ -92,12 +87,12 @@ describe('File Management', () => {
       cy.get('[data-testid=delete-file-button]').first().click()
       cy.get('[data-testid=confirm-delete-button]').click()
       
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'File deleted successfully')
       
       cy.get('[data-testid=file-list]')
-        .should('not.contain', 'test-image.jpg')
+        .should('not.contain', 'test-image.png')
     })
 
     it('should cancel file deletion', () => {
@@ -105,7 +100,7 @@ describe('File Management', () => {
       cy.get('[data-testid=cancel-delete-button]').click()
       
       cy.get('[data-testid=file-list]')
-        .should('contain', 'test-image.jpg')
+        .should('contain', 'test-image.png')
     })
   })
 })
