@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   backend:
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
 
       - uses: pnpm/action-setup@v2
         with:
@@ -75,7 +75,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
 
       - name: Install frontend dependencies
         run: npm install
@@ -89,7 +89,7 @@ jobs:
   deploy:
     needs: [backend, frontend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v4
@@ -102,8 +102,20 @@ jobs:
 
       - name: Build and push Docker images
         run: |
+          # Build images
           docker compose build
-          docker compose push
+          
+          # Tag images with Docker Hub repository and version
+          docker tag roboclaim-backend:latest ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-backend:latest
+          docker tag roboclaim-backend:latest ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-backend:${{ github.sha }}
+          docker tag roboclaim-frontend:latest ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-frontend:latest
+          docker tag roboclaim-frontend:latest ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-frontend:${{ github.sha }}
+          
+          # Push images
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-backend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-backend:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-frontend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/roboclaim-frontend:${{ github.sha }}
 
       # Add your deployment steps here
       # - name: Deploy to production
