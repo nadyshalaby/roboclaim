@@ -1,16 +1,16 @@
 import { Process, Processor } from '@nestjs/bull';
-import { Job } from 'bull';
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Job } from 'bull';
+import { parse } from 'csv-parse/sync';
 import * as fs from 'fs';
 import * as pdfParse from 'pdf-parse';
-import { createWorker } from 'tesseract.js';
-import { parse } from 'csv-parse/sync';
+import { createWorker, PSM } from 'tesseract.js';
+import { Repository } from 'typeorm';
 import * as xlsx from 'xlsx';
 import { File, FileStatus, FileType } from '../entities/file.entity';
 import { FileGateway } from '../gateways/file.gateway';
-import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 interface PdfData {
   text: string;
@@ -28,12 +28,6 @@ interface ExtractedData {
   words?: unknown[];
   records?: Record<string, unknown>[];
   [key: string]: unknown;
-}
-
-interface TesseractResult {
-  text: string;
-  confidence: number;
-  blocks: unknown[];
 }
 
 interface CsvParseResult {
@@ -61,7 +55,7 @@ export class FileProcessor {
       fileType: FileType;
       userId: string;
     }>,
-  ) {
+  ): Promise<void> {
     const { fileId, filePath, fileType, userId } = job.data;
     console.log({ fileId, filePath, fileType, userId });
     this.logger.debug(`Processing file ${fileId} of type ${fileType}`);
@@ -125,15 +119,29 @@ export class FileProcessor {
       );
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'An unknown error occurred';
       this.logger.error(`Error processing file ${fileId}: ${errorMessage}`);
-      await this.fileRepository.update(fileId, {
-        status: FileStatus.FAILED,
-        errorMessage,
-      });
-      this.fileGateway.notifyFileStatus(userId, fileId, FileStatus.FAILED, {
-        error: errorMessage,
-      });
+
+      // Update file status to failed
+      try {
+        await this.fileRepository.update(fileId, {
+          status: FileStatus.FAILED,
+          errorMessage,
+        });
+
+        this.fileGateway.notifyFileStatus(userId, fileId, FileStatus.FAILED, {
+          error: errorMessage,
+        });
+      } catch (updateError) {
+        this.logger.error(`Failed to update file status: ${updateError}`);
+      }
+
+      // Rethrow the error to let Bull handle the retry
+      throw error;
     } finally {
       // Cleanup temporary files if needed
       try {
@@ -149,6 +157,12 @@ export class FileProcessor {
   private async processPdf(filePath: string): Promise<ExtractedData> {
     const dataBuffer = fs.readFileSync(filePath);
     try {
+      // Validate PDF header
+      const pdfHeader = dataBuffer.slice(0, 5).toString('ascii');
+      if (pdfHeader !== '%PDF-') {
+        throw new Error('Invalid PDF file format');
+      }
+
       const data = (await pdfParse(dataBuffer)) as PdfData;
       return {
         text: data.text,
@@ -156,25 +170,79 @@ export class FileProcessor {
         metadata: data.metadata,
         version: data.version,
       };
-    } catch (error) {
-      this.logger.error(`Error processing PDF file ${filePath}: ${error}`);
-      throw error;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'An unknown error occurred';
+      this.logger.error(
+        `Error processing PDF file ${filePath}: ${errorMessage}`,
+      );
+
+      if (
+        errorMessage.includes('FormatError: Unknown block type in flate stream')
+      ) {
+        throw new Error(
+          'The PDF file appears to be corrupted or in an unsupported format. Please try uploading a different PDF file.',
+        );
+      }
+
+      throw new Error(`Failed to process PDF file: ${errorMessage}`);
     }
   }
 
   private async processImage(filePath: string): Promise<ExtractedData> {
-    const worker = await createWorker();
+    // Verify supported image format
+    const supportedFormats = ['.png', '.jpg', '.jpeg', '.bmp', '.pbm', '.webp'];
+    const fileExt = filePath.toLowerCase().slice(filePath.lastIndexOf('.'));
+    if (!supportedFormats.includes(fileExt)) {
+      throw new Error(
+        `Unsupported image format: ${fileExt}. Supported formats are: ${supportedFormats.join(', ')}`,
+      );
+    }
+
+    // Create worker with logging to help debug issues
+    const worker = await createWorker('eng', 1, {
+      logger: (m) =>
+        this.logger.debug(`Tesseract progress: ${JSON.stringify(m)}`),
+    });
+
     try {
-      await worker.load('eng+osd');
-      await worker.reinitialize('eng');
-      type WorkerResult = { data: TesseractResult };
-      const result = (await worker.recognize(filePath)) as WorkerResult;
-      const { data } = result;
+      // Verify the file exists and is readable
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Image file not found at path: ${filePath}`);
+      }
+
+      // Set parameters for better accuracy
+      await worker.setParameters({
+        tessedit_pageseg_mode: PSM.AUTO,
+        tessedit_ocr_engine_mode: 3, // Legacy + LSTM mode
+        preserve_interword_spaces: '1',
+      });
+
+      // Recognize the image directly from file path
+      const { data } = await worker.recognize(filePath);
+
+      if (!data || !data.text) {
+        throw new Error('Failed to extract text from image');
+      }
+
       return {
         text: data.text,
-        confidence: data.confidence,
-        words: data.blocks,
+        confidence: data.confidence || 0,
+        words: data.blocks || [],
       };
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : 'An unknown error occurred';
+      this.logger.error(`Error processing image: ${errorMessage}`);
+      throw new Error(`Failed to process image: ${errorMessage}`);
     } finally {
       await worker.terminate();
     }

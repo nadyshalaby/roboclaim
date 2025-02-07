@@ -1,12 +1,19 @@
 # Base image
 FROM node:23-slim
 
-# Install build dependencies
+# Install build dependencies and Tesseract image processing libraries
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
     procps \
+    tesseract-ocr \
+    libtesseract-dev \
+    libgif-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
