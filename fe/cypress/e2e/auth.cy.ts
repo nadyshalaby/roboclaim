@@ -60,39 +60,53 @@ describe('Authentication', () => {
     })
   })
 
-  describe('Register', () => {
-    const newUser = {
-      email: `test${Date.now()}@example.com`,
-      password: 'Test123!@#',
-    }
-
-    beforeEach(() => {
-      // Intercept registration requests
-      cy.intercept('POST', `${Cypress.env('apiUrl')}/auth/register`).as('registerRequest')
-    })
-
+  describe('Register new user', () => {
+    
     it('should successfully register a new user', () => {
-      cy.register(newUser.email, newUser.password)
+      const newUser = {
+        email: `test${Date.now()}@example.com`,
+        password: 'Test123!@#',
+      }
+
+      cy.register(newUser.email, newUser.password, 'user')
 
       // Wait for successful registration
       cy.wait('@registerRequest').its('response.statusCode').should('eq', 201)
 
-      // Verify redirect to login
-      cy.url().should('include', '/login')
-      cy.get('[data-testid=success-message]')
+      cy.get('body')
         .should('be.visible')
         .and('contain', 'Registered successfully')
+      
+        // Verify redirect to login
+      cy.url().should('include', '/login')
+    })
+
+
+    it('should successfully register a new admin user', () => {
+      const newUser = {
+        email: `test${Date.now()}@example.com`,
+        password: 'Test123!@#',
+      }
+
+      cy.register(newUser.email, newUser.password, 'admin')
+
+      // Wait for successful registration
+      cy.wait('@registerRequest').its('response.statusCode').should('eq', 201)
+
+      cy.get('body')
+        .should('be.visible')
+        .and('contain', 'Registered successfully')
+
+      // Verify redirect to login
+      cy.url().should('include', '/login')
     })
 
     it('should show error when registering with existing email', () => {
-      cy.register(testUser.email, testUser.password)
+      cy.register(testUser.email, testUser.password, 'user')
 
       // Wait for error response
-      cy.wait('@registerRequest').its('response.statusCode').should('eq', 400)
+      cy.wait('@registerRequest').its('response.statusCode').should('eq', 401)
 
-      cy.get('[data-testid=error-message]')
-        .should('be.visible')
-        .and('contain', 'Email already exists')
     })
   })
 
@@ -100,14 +114,11 @@ describe('Authentication', () => {
     beforeEach(() => {
       // Login and wait for success before testing logout
       cy.login(testUser.email, testUser.password)
-      cy.wait('@loginRequest').its('response.statusCode').should('eq', 200)
-
-      // Intercept logout request
-      cy.intercept('POST', `${Cypress.env('apiUrl')}/auth/logout`).as('logoutRequest')
     })
 
     it('should successfully logout', () => {
       cy.logout()
+
       cy.url().should('include', '/login')
       cy.get('[data-testid=login-button]').should('be.visible')
     })

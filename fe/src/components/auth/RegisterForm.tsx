@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { auth } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
@@ -46,21 +45,11 @@ export default function RegisterForm() {
     onSuccess: () => {
       const message = 'Registered successfully';
       toast.success(message);
-      const successDiv = document.createElement('div');
-      successDiv.setAttribute('data-testid', 'success-message');
-      successDiv.className = 'text-green-600 text-sm';
-      successDiv.textContent = message;
-      document.querySelector('form')?.appendChild(successDiv);
       router.push('/login');
     },
     onError: (error: ApiError) => {
       const errorMessage = error.response?.data?.message || 'Failed to register';
       toast.error(errorMessage);
-      const errorDiv = document.createElement('div');
-      errorDiv.setAttribute('data-testid', 'error-message');
-      errorDiv.className = 'text-red-600 text-sm';
-      errorDiv.textContent = errorMessage;
-      document.querySelector('form')?.appendChild(errorDiv);
     },
     onSettled: () => {
       setIsLoading(false);
@@ -112,7 +101,7 @@ export default function RegisterForm() {
         </label>
         <select
           id="role"
-          data-testid="role-input"
+          data-testid="role-select"
           {...register('role')}
           className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         >
