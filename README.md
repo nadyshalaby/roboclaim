@@ -52,13 +52,10 @@ RoboClaim is a modern web application built with a microservices architecture, f
 - Real-time notifications with toast messages
 
 ## Prerequisites
-- Node.js (v23)
 - Docker and Docker Compose
-- PostgreSQL
-- pnpm (for backend)
-- npm (for frontend)
+- Node.js (v23) - for running Cypress tests locally
 
-## Installation
+## Installation & Development
 
 1. Clone the repository:
 ```bash
@@ -66,148 +63,69 @@ git clone https://github.com/yourusername/roboclaim.git
 cd roboclaim
 ```
 
-2. Install dependencies:
-```bash
-# Install backend dependencies
-cd be
-pnpm install
-
-# Install frontend dependencies
-cd ../fe
-npm install
-```
-
-3. Set up environment variables:
-```bash
-# Copy example env files
-cp .env.example .env
-```
-
-4. Start the development environment:
-```bash
-# Start all services using Docker Compose
-docker-compose up -d
-
-# Or start services individually:
-# Backend
-cd be
-npm run start:dev
-
-# Frontend
-cd fe
-npm run dev
-```
-
-5. Seed the database:
-```bash
-cd be
-npm run seed
-```
-
-## Development
-
-### Backend Development
-```bash
-cd be
-npm run start:dev     # Start development server
-npm run test         # Run tests
-npm run test:e2e    # Run end-to-end tests
-npm run lint        # Lint code
-```
-
-### Frontend Development
-```bash
-cd fe
-npm run dev           # Start development server
-npm run test         # Run tests
-npm run cypress      # Run E2E tests
-npm run lint        # Lint code
-```
-
-## Development
-
-The project uses different package managers for optimal performance:
-- Backend: `pnpm` (v10)
-- Frontend: `npm`
-
-### Backend Development
-```bash
-cd be
-pnpm install        # Install dependencies
-pnpm start:dev     # Start development server with hot-reload
-```
-
-> **Important**: When using Docker and need to seed the database:
-> ```bash
-> # Access the backend container
-> docker exec -it roboclaim-backend-1 bash
-> 
-> # Run the seeding command
-> pnpm seed
-> 
-> # Exit the container
-> exit
-> ```
-
-### Frontend Development
-```bash
-cd fe
-npm install        # Install dependencies
-npm run dev        # Start development server
-```
-
-> **Important**: When using Docker, the frontend will be available at `http://localhost:3001`
-
-### Docker Development
-```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Rebuild services
-docker-compose up -d --build
-
-# Access backend container and run database seeding
-docker exec -it roboclaim-backend-1 bash
-pnpm seed
-exit
-```
-
-### Running Tests
-Cypress tests should be run from your local machine, not from within Docker containers. This is necessary for Cypress to properly launch and control the browser:
-
-```bash
-# From your local machine
-cd fe
-npm install  # Ensure Cypress is installed
-npm run cypress  # Opens Cypress test runner
-# or
-npm run cypress:headless  # Runs tests in headless mode
-```
-
-> **Note**: Running Cypress inside Docker containers can cause issues with browser launching and display handling. Always run Cypress tests from your local development machine for the best experience.
-
-## Deployment
-
-### Docker Deployment
-1. Set up environment variables:
+2. Set up environment variables:
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
-2. Build and run using Docker Compose:
+3. Start the application:
 ```bash
-# Development
+# Launch all services using Docker Compose
 docker-compose up -d
-
-# Production
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-### Manual Deployment
+4. Seed the database (must be run inside the backend container):
+```bash
+# Access the backend container
+docker exec -it roboclaim-backend-1 bash
+
+# Run the seeding command
+pnpm seed
+
+# Exit the container
+exit
+```
+
+5. Running tests (must be run on your local machine):
+```bash
+# Run tests from your local machine
+cd fe
+# you need to have node 23 installed globally
+npm run cypress         # Opens Cypress test runner
+# or
+npm run cypress:headless # Runs tests in headless mode
+# or 
+npm run test:e2e         # Runs e2e tests
+```
+
+> **Important Notes**:
+> - All development services are handled by Docker Compose - no need to run additional commands
+> - Frontend will be available at `http://localhost:3001`
+> - Backend API will be available at `http://localhost:3000`
+> - Database seeding must be run from inside the backend container
+> ### Running Tests
+> Cypress tests should be run from your local machine, not from within Docker containers. This is necessary for Cypress to properly launch and control the browser:
+> 
+> ```bash
+> # From your local machine
+> cd fe
+> # Ensure Cypress is installed
+> npm run cypress  # Opens Cypress test runner
+> # or
+> npm run cypress:headless  # Runs tests in headless mode
+> ```
+
+> **Note**: Running Cypress inside Docker containers can cause issues with browser launching and display handling. Always run Cypress tests from your local development machine for the best experience.
+
+
+## Hint for Docker users
+
+The project uses different package managers for optimal performance:
+- Backend: `pnpm` (v10)
+- Frontend: `npm`
+
+### Deployment
 1. Set up dependencies:
 - PostgreSQL (v16)
 - Redis (v7)
