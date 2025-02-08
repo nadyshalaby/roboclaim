@@ -50,7 +50,7 @@ export default function FileUpload() {
     >
       <input data-testid="file-input" {...getInputProps()} />
       <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
-      <p className="mt-2 text-sm text-gray-600">
+      <p className="mt-2 text-sm text-gray-500">
         {isDragActive
           ? 'Drop the files here...'
           : 'Drag and drop files here, or click to select files'}

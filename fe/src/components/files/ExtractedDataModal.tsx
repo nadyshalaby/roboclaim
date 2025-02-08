@@ -111,7 +111,7 @@ export default function ExtractedDataModal({
                     >
                       Extracted Data from {file.originalName}
                     </Dialog.Title>
-                    <div className="mt-4 max-h-[60vh] overflow-y-auto">
+                    <div className="mt-4 max-h-[60vh] overflow-y-auto text-gray-900">
                       {renderExtractedData()}
                     </div>
                   </div>
