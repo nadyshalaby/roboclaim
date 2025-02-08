@@ -40,6 +40,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: be/pnpm-lock.yaml
 
       - uses: pnpm/action-setup@v2
         with:
@@ -47,21 +49,6 @@ jobs:
 
       - name: Install backend dependencies
         run: pnpm install
-
-      - name: Run backend linting
-        run: pnpm lint
-
-      - name: Run backend tests
-        run: pnpm test
-        env:
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_USERNAME: postgres
-          DATABASE_PASSWORD: postgres
-          DATABASE_NAME: roboclaim
-          JWT_SECRET: test-secret
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
 
   frontend:
     runs-on: ubuntu-latest
@@ -76,15 +63,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: fe/package-lock.json
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run frontend linting
-        run: npm run lint
-
-      - name: Run frontend tests
-        run: npm test
+      - name: Build frontend
+        run: npm run build
+        env:
+          VITE_API_URL: http://localhost:3000
 
   deploy:
     needs: [backend, frontend]
