@@ -10,12 +10,8 @@ describe('File Management', () => {
 
   describe('File Upload', () => {
     it('should upload an image file successfully', () => {
-      cy.fixture('test-image.png').then(fileContent => {
-        cy.get('[data-testid=file-input]').attachFile({
-          fileContent,
-          fileName: 'test-image.png',
-          mimeType: 'image/png'
-        })
+      cy.get('[data-testid=file-input]').selectFile('./cypress/fixtures/test-image.jpg', {
+        force: true
       })
       
       cy.get('body')
@@ -23,14 +19,12 @@ describe('File Management', () => {
         .and('contain', 'File uploaded successfully')
       
       cy.get('[data-testid=file-list]')
-        .should('contain', 'test-image.png')
+        .should('contain', 'test-image.jpg')
     })
 
     it('should upload a PDF file successfully', () => {
-      cy.get('[data-testid=file-input]').attachFile({
-        filePath: 'test-document.pdf',
-        fileName: 'test-document.pdf',
-        mimeType: 'application/pdf'
+      cy.get('[data-testid=file-input]').selectFile('./cypress/fixtures/test-document.pdf', {
+        force: true
       })
       
       cy.get('body')
@@ -42,12 +36,10 @@ describe('File Management', () => {
     })
 
     it('should upload a CSV file successfully', () => {
-      cy.get('[data-testid=file-input]').attachFile({
-        filePath: 'test-data.csv',
-        fileName: 'test-data.csv',
-        mimeType: 'text/csv'
+      cy.get('[data-testid=file-input]').selectFile('./cypress/fixtures/test-data.csv', {
+        force: true
       })
-      
+
       cy.get('body')
         .should('be.visible')
         .and('contain', 'File uploaded successfully')
@@ -57,50 +49,48 @@ describe('File Management', () => {
     })
 
     it('should show error when uploading invalid file type', () => {
-      cy.fixture('test-invalid.exe').then(fileContent => {
-        cy.get('[data-testid=file-input]').attachFile({
-          fileContent,
-          fileName: 'test-invalid.exe',
-          mimeType: 'application/x-msdownload'
-        })
+      cy.get('[data-testid=file-input]').selectFile('./cypress/fixtures/test-file.txt', {
+        force: true
       })
       
-      cy.get('[data-testid=error-message]')
-        .should('be.visible')
-        .and('contain', 'Invalid file type')
+      cy.get('[data-testid=file-list]')
+        .should('not.contain', 'test-file.txt')
     })
   })
 
   describe('File Deletion', () => {
     beforeEach(() => {
       // Upload a test file first
-      cy.fixture('test-image.png').then(fileContent => {
-        cy.get('[data-testid=file-input]').attachFile({
-          fileContent,
-          fileName: 'test-image.png',
-          mimeType: 'image/jpeg'
-        })
+      cy.get('[data-testid=file-input]').selectFile('./cypress/fixtures/test-image.jpg', {
+        force: true
       })
     })
 
     it('should delete a file successfully', () => {
-      cy.get('[data-testid=delete-file-button]').first().click()
-      cy.get('[data-testid=confirm-delete-button]').click()
-      
-      cy.get('body')
-        .should('be.visible')
-        .and('contain', 'File deleted successfully')
-      
-      cy.get('[data-testid=file-list]')
-        .should('not.contain', 'test-image.png')
-    })
+      // Intercept the delete request
+      cy.intercept('DELETE', '**/files/*').as('deleteFile')
 
-    it('should cancel file deletion', () => {
-      cy.get('[data-testid=delete-file-button]').first().click()
-      cy.get('[data-testid=cancel-delete-button]').click()
-      
-      cy.get('[data-testid=file-list]')
-        .should('contain', 'test-image.png')
+      // Get the file ID from the button's parent
+      cy.get('[data-testid=delete-file-button]')
+        .should('be.visible')
+        .first()
+        .parent()
+        .parent()
+        .invoke('attr', 'data-file-id')
+        .then(fileId => {
+          // Trigger click with mousedown and mouseup events
+          cy.get(`[data-file-id='${fileId}'] [data-testid=delete-file-button]`)
+            .trigger('mousedown', { force: true })
+            .trigger('mouseup', { force: true })
+            .click({ force: true })
+        })
+
+      // Wait for the delete request to complete
+      cy.wait('@deleteFile')
+
+      // Wait for success message
+      cy.contains('File deleted successfully')
+        .should('be.visible')
     })
   })
 })

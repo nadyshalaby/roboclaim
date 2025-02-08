@@ -6,7 +6,7 @@ import { Job } from 'bull';
 import { parse } from 'csv-parse/sync';
 import * as fs from 'fs';
 import * as pdfParse from 'pdf-parse';
-import { createWorker, PSM } from 'tesseract.js';
+import { createWorker } from 'tesseract.js';
 import { Repository } from 'typeorm';
 import * as xlsx from 'xlsx';
 import { File, FileStatus, FileType } from '../entities/file.entity';
@@ -194,8 +194,15 @@ export class FileProcessor {
   }
 
   private async processImage(filePath: string): Promise<ExtractedData> {
-    // Verify supported image format
-    const supportedFormats = ['.png', '.jpg', '.jpeg', '.bmp', '.pbm', '.webp'];
+    const supportedFormats = [
+      '.png',
+      '.jpg',
+      '.jpeg',
+      '.webp',
+      '.tiff',
+      '.tif',
+    ];
+
     const fileExt = filePath.toLowerCase().slice(filePath.lastIndexOf('.'));
     if (!supportedFormats.includes(fileExt)) {
       throw new Error(
@@ -203,38 +210,34 @@ export class FileProcessor {
       );
     }
 
-    // Create worker with logging to help debug issues
-    const worker = await createWorker('eng', 1, {
-      logger: (m) =>
-        this.logger.debug(`Tesseract progress: ${JSON.stringify(m)}`),
-    });
-
     try {
-      // Verify the file exists and is readable
       if (!fs.existsSync(filePath)) {
         throw new Error(`Image file not found at path: ${filePath}`);
       }
 
-      // Set parameters for better accuracy
-      await worker.setParameters({
-        tessedit_pageseg_mode: PSM.AUTO,
-        tessedit_ocr_engine_mode: 3, // Legacy + LSTM mode
-        preserve_interword_spaces: '1',
-      });
+      this.logger.debug(`Processing image: ${filePath}`);
 
-      // Recognize the image directly from file path
-      const { data } = await worker.recognize(filePath);
+      // Initialize Tesseract worker with English language
+      const worker = await createWorker('eng');
 
-      if (!data || !data.text) {
-        throw new Error('Failed to extract text from image');
+      try {
+        // Perform OCR on the image
+        const { data } = await worker.recognize(filePath);
+
+        if (!data.text) {
+          throw new Error('No text detected in the image');
+        }
+
+        return {
+          text: data.text,
+          confidence: data.confidence || 0,
+          words: data.blocks || [],
+        };
+      } finally {
+        // Always terminate the worker to free up resources
+        await worker.terminate();
       }
-
-      return {
-        text: data.text,
-        confidence: data.confidence || 0,
-        words: data.blocks || [],
-      };
-    } catch (error: unknown) {
+    } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -243,8 +246,6 @@ export class FileProcessor {
             : 'An unknown error occurred';
       this.logger.error(`Error processing image: ${errorMessage}`);
       throw new Error(`Failed to process image: ${errorMessage}`);
-    } finally {
-      await worker.terminate();
     }
   }
 

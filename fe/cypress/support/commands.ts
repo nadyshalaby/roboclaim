@@ -1,5 +1,4 @@
 /// <reference types="cypress" />
-/// <reference types="cypress-file-upload" />
 
 declare global {
   namespace Cypress {
@@ -7,8 +6,6 @@ declare global {
       login(email: string, password: string): Chainable<void>
       register(email: string, password: string, role: string): Chainable<void>
       logout(): Chainable<void>
-      uploadFile(filePath: string, fileType: string): Chainable<void>
-      attachFile: any
     }
   }
 }
@@ -60,15 +57,6 @@ Cypress.Commands.add('register', (email: string, password: string, role: string)
 Cypress.Commands.add('logout', () => {
   cy.get('[data-testid=user-menu]').click()
   cy.get('[data-testid=logout-button]').click()
-})
-
-// File upload command
-Cypress.Commands.add('uploadFile', (filePath: string, fileType: string) => {
-  cy.get('[data-testid=file-input]').attachFile({
-    filePath: filePath,
-    encoding: 'utf-8',
-    mimeType: fileType
-  })
 })
 
 export { }

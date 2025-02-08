@@ -19,7 +19,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    restart: unless-stopped
+    restart: always
     networks:
       - app-network
 
@@ -30,7 +30,7 @@ services:
     volumes:
       - ./be:/usr/src/app
       - /usr/src/app/node_modules
-    restart: unless-stopped
+    restart: always
     ports:
       - "3000:3000"
     command: sh -c "rm -rf dist && pnpm start:dev"

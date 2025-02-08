@@ -169,6 +169,7 @@ export default function FileList() {
         {fileList.map((file) => (
           <div
             key={file.id}
+            data-file-id={file.id}
             className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
           >
             <div className="flex items-center space-x-4">
@@ -206,6 +207,7 @@ export default function FileList() {
               )}
               <button
                 onClick={() => deleteMutation.mutate(file.id)}
+                data-testid="delete-file-button"
                 className="text-gray-400 hover:text-red-600"
               >
                 <TrashIcon className="h-5 w-5" />

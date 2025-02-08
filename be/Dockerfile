@@ -1,7 +1,7 @@
 # Base image
-FROM node:23-slim
+FROM node:23
 
-# Install build dependencies and Tesseract image processing libraries
+# Install build dependencies, Tesseract OCR, Leptonica, and comprehensive image format support
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -9,10 +9,13 @@ RUN apt-get update && apt-get install -y \
     procps \
     tesseract-ocr \
     libtesseract-dev \
-    libgif-dev \
-    libjpeg-dev \
+    libleptonica-dev \
     libpng-dev \
     libtiff-dev \
+    libjpeg-dev \
+    libgif-dev \
+    libwebp-dev \
+    libopenjp2-7-dev \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
