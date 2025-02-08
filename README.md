@@ -135,17 +135,28 @@ The project uses different package managers for optimal performance:
 cd be
 pnpm install        # Install dependencies
 pnpm start:dev     # Start development server with hot-reload
-pnpm seed           # Seed the database with initial data
 ```
+
+> **Important**: When using Docker and need to seed the database:
+> ```bash
+> # Access the backend container
+> docker exec -it roboclaim-backend-1 bash
+> 
+> # Run the seeding command
+> pnpm seed
+> 
+> # Exit the container
+> exit
+> ```
 
 ### Frontend Development
 ```bash
 cd fe
 npm install        # Install dependencies
 npm run dev        # Start development server
-npm run cypress    # Open Cypress test runner
-npm run cypress:headless  # Run Cypress tests in headless mode
 ```
+
+> **Important**: When using Docker, the frontend will be available at `http://localhost:3001`
 
 ### Docker Development
 ```bash
@@ -157,7 +168,26 @@ docker-compose logs -f
 
 # Rebuild services
 docker-compose up -d --build
+
+# Access backend container and run database seeding
+docker exec -it roboclaim-backend-1 bash
+pnpm seed
+exit
 ```
+
+### Running Tests
+Cypress tests should be run from your local machine, not from within Docker containers. This is necessary for Cypress to properly launch and control the browser:
+
+```bash
+# From your local machine
+cd fe
+npm install  # Ensure Cypress is installed
+npm run cypress  # Opens Cypress test runner
+# or
+npm run cypress:headless  # Runs tests in headless mode
+```
+
+> **Note**: Running Cypress inside Docker containers can cause issues with browser launching and display handling. Always run Cypress tests from your local development machine for the best experience.
 
 ## Deployment
 
