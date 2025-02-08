@@ -50,7 +50,7 @@ export default function ExtractedDataModal({
                     {Object.values(record).map((value: any, i: number) => (
                       <td
                         key={i}
-                        className="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                        className="whitespace-nowrap px-3 py-4 text-sm text-gray-900"
                       >
                         {value}
                       </td>
