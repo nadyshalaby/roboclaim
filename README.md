@@ -87,7 +87,27 @@ pnpm seed
 exit
 ```
 
-5. Running tests (must be run on your local machine):
+5. Access pgAdmin (Database Management):
+```bash
+# pgAdmin is available at:
+URL: http://localhost:5050
+Email: admin@admin.com
+Password: admin
+```
+
+6. Access the database:
+```bash
+# The PostgreSQL database is accessible at:
+Host: localhost
+Port: 5432
+Username: (value from DATABASE_USERNAME in .env)
+Password: (value from DATABASE_PASSWORD in .env)
+Database: (value from DATABASE_NAME in .env)
+```
+
+You can connect to the database using any PostgreSQL client like pgAdmin, DBeaver, or DataGrip.
+
+7. Running tests (must be run on your local machine):
 ```bash
 # Run tests from your local machine
 cd fe
