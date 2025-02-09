@@ -22,3 +22,4 @@ COPY . .
 EXPOSE 3001
 
 # No CMD here since we're using docker-compose command
+CMD ["npm", "run", "dev"]

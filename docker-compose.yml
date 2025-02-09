@@ -33,7 +33,6 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    command: sh -c "rm -rf dist && pnpm start:dev"
     environment:
       - PORT=${PORT}
       - NODE_ENV=development
@@ -65,7 +64,6 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3000"
-    command: npm run dev
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3000
       - NODE_ENV=development

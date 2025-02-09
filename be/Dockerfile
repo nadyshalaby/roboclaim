@@ -42,3 +42,5 @@ RUN mkdir -p uploads
 EXPOSE 3000
 
 # No CMD here since we're using docker-compose command
+CMD ["sh", "-c", "rm -rf dist && pnpm start:dev"]
+
